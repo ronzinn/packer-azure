@@ -1,0 +1,76 @@
+{
+  "builders": [
+    {
+      "boot_wait": "17m",
+      "communicator": "winrm",
+      "cpus": "6",
+      "disk_size": "{{user `disk_size`}}",
+      "floppy_files": [
+        "{{user `autounattend`}}",
+        "./floppy/WindowsPowershell.lnk",
+        "./scripts/fixnetwork.ps1",
+        "./scripts/disable-screensaver.ps1",
+        "./scripts/sysprep.bat",
+        "./scripts/unattend.xml",
+        "./scripts/prepare-for-upload-vhd-image.ps1",
+        "./scripts/disable-winrm.ps1",
+        "./scripts/enable-winrm.ps1",
+        "./scripts/microsoft-updates.bat",
+        "./scripts/win-updates.ps1"
+      ],
+      "headless": true,
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_url": "{{user `iso_url`}}",
+      "memory": "10240",
+      "shutdown_command": "a:/sysprep.bat",
+      "shutdown_timeout": "15m",
+      "type": "qemu",
+      "accelerator": "kvm",
+      "output_directory": "windows_10-qemu",
+      "qemuargs": [
+        [ "-drive", "file=windows_10-qemu/{{ .Name }},if=virtio,cache=writeback,discard=ignore,format=qcow2,index=1" ],
+        [ "-drive", "file={{ user `virtio_win_iso` }},media=cdrom,index=3" ]
+      ],
+      "vm_name": "windows_10",
+      "winrm_password": "vagrant",
+      "winrm_timeout": "{{user `winrm_timeout`}}",
+      "winrm_username": "vagrant"
+    }
+  ],
+
+  "post-processors": [
+    {
+      "keep_input_artifact": true,
+      "output": "windows_10_{{.Provider}}.box",
+      "type": "vagrant",
+      "vagrantfile_template": "vagrantfile-windows_10.template"
+    }
+  ],
+
+  "provisioners": [
+    {
+      "scripts": [
+
+        "./scripts/prepare-for-upload-vhd-image.ps1"
+      ],
+      "type": "powershell",
+      "elevated_user": "vagrant",
+      "elevated_password": "{{.WinRMPassword}}"
+    }
+  ],
+  "variables": {
+    "autounattend": "./answer_files/10/Autounattend.xml",
+    "disk_size": "61440",
+    "disk_type_id": "1",
+    "headless": "false",
+    "iso_checksum": "b570ddfdc4672f4629a95316563df923bd834aec657de5d4ca7c7ef9b58df2b1",
+    "iso_checksum_type": "sha256",
+    "iso_url": "/home/ronzin/Downloads/Packer-Windows/packer-windows-2020.02.26/iso/en_windows_10_enterprise_ltsc_2019_x64_dvd_5795bb03.iso",
+    "restart_timeout": "5m",
+    "vhv_enable": "false",
+    "winrm_timeout": "6h",
+    "virtio_win_iso": "/home/ronzin/Downloads/Packer-Windows/packer-windows-2020.02.26/iso/virtio-win-0.1.171.iso"
+  }
+}
+
